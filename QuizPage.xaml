@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="QueryQuest.QuizPage"
+             BackgroundColor="#0b1121">
+    <Grid>
+        <VerticalStackLayout x:Name="QuizArea" Padding="30, 40, 30, 30" Spacing="25" IsVisible="True">
+        <Label x:Name="ScoreLabel"
+        Text="Poäng: 0"
+        TextColor="Gold"
+        FontSize="18"
+        FontAttributes="Bold"
+        HorizontalOptions="End" />
+        <Label x:Name="QuestionCounter"
+       Text="Fråga: 0 / 0"
+       TextColor="LightGray"
+       FontSize="14"
+       HorizontalOptions="End" />
+        <ProgressBar x:Name="Progressbar"
+                     Progress="1"/>
+        <Label x:Name="QuestionLabel"
+               HorizontalOptions="Center"
+               Margin="20"
+               FontSize="24"
+               Text =""
+               TextColor="White"/>
+        <Grid x:Name="AnswerGrid"
+              ColumnDefinitions="*,*"
+              RowDefinitions="Auto,Auto"
+              Padding="10"
+              ColumnSpacing="10"
+              RowSpacing="10">
+        </Grid>
+        </VerticalStackLayout>
+        <VerticalStackLayout x:Name="GameOverArea" Padding="30" Spacing="25" VerticalOptions="Center" IsVisible="False">
+            <Label Text="Spelet är över"
+                   TextColor="Gold"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"/>
+            <Label x:Name="FinalScoreLabel"
+                   TextColor="White"
+                   FontSize="24"
+                   HorizontalOptions="Center"/>
+            <Button Text="Spela igen"
+                    Clicked="OnPlayAgainClicked"
+                    BackgroundColor="Gold"
+                    TextColor="#0b1121"
+                    CornerRadius="15"
+                    HeightRequest="60"/>
+            <Button Text="Huvudmenyn"
+                    Clicked="OnClickedGoToMainPage"
+                    BackgroundColor="Red"
+                    FontAttributes="Bold"
+                    TextColor="#0b1121"/>
+        </VerticalStackLayout>
+                             
+    </Grid>
+</ContentPage>

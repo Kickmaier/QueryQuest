@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="QueryQuest.MainPage"
+             BackgroundColor="#0b1121">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="30,0" Spacing="25">
+            <Image Source="queryquestlogo.png"
+                HeightRequest="185"
+                Aspect="AspectFit" />
+            <Label Text="QUERY QUEST"
+                TextColor="White"
+                FontSize="32"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+            <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+                <Label x:Name="AmountLabel" FontSize="16" />
+                <Label x:Name="DifficultyLabel" FontSize="16" />
+                <Label x:Name="CategoryLabel" FontSize="16" />
+            </VerticalStackLayout>
+            <Button Text="Starta Quiz"
+                Clicked="OnGetQuestionClicked"
+                BackgroundColor="#1da1f2"
+                TextColor="White"
+                CornerRadius="15" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
