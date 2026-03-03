@@ -27,7 +27,7 @@ namespace QueryQuest
             AmountSelection.IsVisible =false;
             DifficultySelection.IsVisible =false;
         }
-        private async void SetAmount(object sender, EventArgs e)
+        private void SetAmount(object sender, EventArgs e)
         {
             var btn = (Button)sender;
             Settings.Amount = btn.CommandParameter.ToString();

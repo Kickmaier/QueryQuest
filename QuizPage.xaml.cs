@@ -1,22 +1,23 @@
 using QueryQuest.Data;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
-
-
+using System.Collections.Generic;
 namespace QueryQuest;
+
 [QueryProperty(nameof(Amount), "amount")]
 [QueryProperty(nameof(Difficulty), "difficulty")]
-[QueryProperty(nameof(CategoryID), "category")]
+[QueryProperty(nameof(CategoryId), "category")]
+
 public partial class QuizPage : ContentPage
 {
     public string Amount { get; set; }
     public string Difficulty { get; set; }
-    public string CategoryID { get; set; }
+    public string CategoryId { get; set; }
+
+    private readonly OpenTriviaDbApiConnection _apiConnection = new OpenTriviaDbApiConnection();
 
     string currentCorrectAnswer = "";
     int currentScore = 0;
@@ -35,33 +36,25 @@ public partial class QuizPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-
-        
         await GetQuestionFromApiAsync();
     }
     public async Task GetQuestionFromApiAsync()
     {
         currentQuestionIndex = 0;
         currentScore = 0;
-        using HttpClient client = new HttpClient();
-        string url = $"https://opentdb.com/api.php?amount={Amount}";
-        if (!string.IsNullOrEmpty(Difficulty))
-        {
-            url += $"&difficulty={Difficulty}";
-        }
-        if (!string.IsNullOrEmpty(CategoryID))
-        {
-            url += $"&category={CategoryID}";
-        }
-        url += "&type=multiple";
+        
         try
         {
-            var response = await client.GetFromJsonAsync<TriviaData.Rootobject>(url);
-            if (response != null && response.results.Length > 0)
+            var questions = await _apiConnection.GetQuestionFromApiAsync(Amount, Difficulty, CategoryId);
+           
+            if (questions != null && questions.Count > 0)
             {
-                totalQuestions = response.results.ToList();
-                ShowNextQuestion();
-                
+                totalQuestions = questions;
+                ShowNextQuestion();     
+            }
+            else 
+            {
+                await DisplayAlert("Info", "Inga frågor hittades", "OK");
             }
         }
         catch (Exception ex)
