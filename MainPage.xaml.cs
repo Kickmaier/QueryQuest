@@ -1,49 +1,97 @@
-﻿using System.Net.Http.Json;
+﻿using QueryQuest.ViewModels;
+using System.Linq;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
-using QueryQuest.Data;
 using System.Web;
-using System.Linq;
+
 namespace QueryQuest
 {
     public partial class MainPage : ContentPage
     {
-        
-        public MainPage()
+        private readonly MainViewModel _mainViewModel;
+        public MainPage(MainViewModel mainViewModel)
         {
             InitializeComponent();
+            _mainViewModel = mainViewModel;
+            BindingContext = _mainViewModel;
         }
-        public void RefreshUI()
-        {
-            AmountLabel.Text = $"Längd: {Settings.AmountDisplay}";
-            DifficultyLabel.Text = $"Svårighetsgrad: {Settings.DifficultyDisplay}";
-            CategoryLabel.Text = $"Kategori: {Settings.CategoryIdDisplay}";
 
-            AmountLabel.TextColor = Settings.AmountColor;
-            DifficultyLabel.TextColor = Settings.DifficultyColor;
-            CategoryLabel.TextColor = Settings.CategoryColor;
-        }
-        protected override void OnAppearing()
-        {
-            base.OnAppearing();
-
-            RefreshUI();
-        }
         private async void OnGetQuestionClicked(object sender, EventArgs e)
         {
-            string amount = Settings.Amount;
-            string difficulty = Settings.Difficulty;
-            string category = Settings.CategoryId;
             Button btn = (Button)sender;
-            btn.IsEnabled = false;
             btn.Text = "Laddar fråga...";
+
+            string amount = _mainViewModel.Amount;
+            string difficulty = _mainViewModel.Difficulty;
+            string category = _mainViewModel.CategoryId;
             
             await Shell.Current.GoToAsync($"{nameof(QuizPage)}?amount={amount}&difficulty={difficulty}&category={category}");
 
-            btn.Text = "Hämtar fråga";
-            btn.IsEnabled = true;
+            btn.Text = "Starta Quiz";
+        }
+        private async void OnToggleMenu(object sender, EventArgs e)
+        {
+            bool isOpening = SideMenu.TranslationX < 0;
+
+            if (isOpening)
+            {
+                MenuOverlay.InputTransparent = false;
+                await Task.WhenAll(
+                    SideMenu.TranslateTo(0, 0, 1000, Easing.CubicOut),
+                    MainView.TranslateTo(280, 0, 1000, Easing.CubicOut),
+                    MenuOverlay.FadeTo(0.7, 300)
+                );
+            }
+            else
+            {
+                MenuOverlay.InputTransparent = true;
+                await Task.WhenAll(
+                    SideMenu.TranslateTo(-280, 0, 300, Easing.CubicIn),
+                    MainView.TranslateTo(0,0,300, Easing.CubicIn),
+                    MenuOverlay.FadeTo(0, 300)
+                );
+            }
+        }
+        private void SetAmount(object sender, EventArgs e)
+        {
+            if (sender is Button btn)
+                _mainViewModel.SetAmount(btn.CommandParameter.ToString());
         }
 
-        
+        private void SetDifficulty(object sender, EventArgs e)
+        {
+            if (sender is Button btn)
+                _mainViewModel.SetDifficulty(btn.CommandParameter.ToString());
+        }
+
+        private void SetCategory(object sender, EventArgs e)
+        {
+            if (sender is Button btn)
+                _mainViewModel.SetCategory(btn.CommandParameter.ToString());
+        }
+
+        private void ToggleAmountSelection(object sender, EventArgs e)
+        {
+            AmountSelection.IsVisible = !AmountSelection.IsVisible;
+            DifficultySelection.IsVisible = false;
+            CategorySelection.IsVisible = false;
+        }
+
+        private void ToggleDifficultySelection(object sender, EventArgs e)
+        {
+            DifficultySelection.IsVisible = !DifficultySelection.IsVisible;
+            AmountSelection.IsVisible = false;
+            CategorySelection.IsVisible = false;
+        }
+
+        private void ToggleCategorySelection(object sender, EventArgs e)
+        {
+            CategorySelection.IsVisible = !CategorySelection.IsVisible;
+            AmountSelection.IsVisible = false;
+            DifficultySelection.IsVisible = false;
+        }
     }
 }
+    
+

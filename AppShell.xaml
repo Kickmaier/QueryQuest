@@ -4,59 +4,10 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:QueryQuest"
-    Shell.FlyoutBehavior="Flyout"
-    Shell.ForegroundColor="Gold"> 
-   
-    <Shell.FlyoutContent>
-        <ScrollView BackgroundColor="#1a2537">
-            <VerticalStackLayout Padding="20" Spacing="10">
-            <Label Text="Inställningar"
-                   TextColor="Gold"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   Margin="0,20"/>
-
-                <Button Text="Längd ∇"
-                    Clicked="ToggleAmountSelection"
-                    BackgroundColor="#2c3e50"
-                    TextColor="White" />
-
-            <VerticalStackLayout x:Name="AmountSelection" IsVisible="False" Margin="10" Spacing="5">
-                <Button Text="Kort" TextColor="White" Clicked="SetAmount" CommandParameter="10" BackgroundColor="#34495e"/>
-                <Button Text="Medel" TextColor="White" Clicked="SetAmount" CommandParameter="25" BackgroundColor="#34495e"/>
-                <Button Text="Långt" TextColor="White" Clicked="SetAmount" CommandParameter="50" BackgroundColor="#34495e"/>
-            </VerticalStackLayout>
-
-                <Button Text="Svårighetsgrad ▾"
-                    Clicked="ToggleDifficultySelection"
-                    BackgroundColor="#2c3e50"
-                    TextColor="White" />
-
-            <VerticalStackLayout x:Name="DifficultySelection" IsVisible="False" Margin="10" Spacing="5">
-                <Button Text="Blandat" TextColor="White" Clicked="SetDifficulty" CommandParameter="" BackgroundColor="#34495e"/>
-                <Button Text="Lätt" TextColor="White" Clicked="SetDifficulty" CommandParameter="easy" BackgroundColor="#34495e"/>
-                <Button Text="Medel" TextColor="White" Clicked="SetDifficulty" CommandParameter="medium" BackgroundColor="#34495e"/>
-                <Button Text="Svårt" TextColor="White" Clicked="SetDifficulty" CommandParameter="hard" BackgroundColor="#34495e"/>
-            </VerticalStackLayout>
-                <Button Text="Kategorier ▾"
-                Clicked="ToggleCategoryIdSelection"
-                BackgroundColor="#2c3e50"
-                TextColor="White" />
-
-                <VerticalStackLayout x:Name="CategorySelection" IsVisible="False" Margin="10" Spacing="5">
-                    <Button Text="Blandat" TextColor="White" Clicked="SetCategoryId" CommandParameter="" BackgroundColor="#34495e"/>
-                    <Button Text="Allmänbildning" TextColor="White" Clicked="SetCategoryId" CommandParameter="9" BackgroundColor="#34495e"/>
-                    <Button Text="Musik" TextColor="White" Clicked="SetCategoryId" CommandParameter="12" BackgroundColor="#34495e"/>
-                    <Button Text="Historia" TextColor="White" Clicked="SetCategoryId" CommandParameter="23" BackgroundColor="#34495e"/>
-                </VerticalStackLayout>
-            </VerticalStackLayout>
-        </ScrollView>
-    </Shell.FlyoutContent>
-
-    <FlyoutItem Title="Hem">
-        <ShellContent
-        Title="QueryQuest"
+    Shell.FlyoutBehavior="Disabled">
+    <ShellContent
+        Title="Home"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
-    </FlyoutItem>
+
 </Shell>
