@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:QueryQuest.ViewModels"
+             x:Class="QueryQuest.Views.QuizPage"
+             BackgroundColor="#0b1121">
+    <Grid>
+        <VerticalStackLayout Padding="30, 5, 30, 30" Spacing="10" 
+                             IsVisible="{Binding QuizAreaVisible}">
+            <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Center" Margin="0,0,0,10">
+                <Button
+                    Text="←"
+                    Grid.Column="0"
+                    FontSize="45"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Start"
+                    FontAttributes="Bold"
+                    BackgroundColor="Transparent"
+                    Clicked="OnBackClicked"/>
+                <Label
+                    Text="{Binding CurrentScore, StringFormat='Poäng: {0}'}"
+                    Grid.Column="1"
+                    TextColor="Gold"
+                    FontSize="18"
+                    FontAttributes="Bold"
+                    HorizontalOptions="Center"/>
+                <Label 
+                    Text="{Binding QuestionCounterText}"
+                    Grid.Column="2"
+                    TextColor="LightGray"
+                    FontSize="14"
+                    HorizontalOptions="End" />  
+            </Grid>
+            <ProgressBar 
+                x:Name="TimerBar"
+                Progress="{Binding ProgressBarProgress}"
+                HeightRequest="10"
+                Margin="40,10">
+                
+                <ProgressBar.Triggers>
+                        <DataTrigger TargetType="ProgressBar" Binding="{Binding TimerStatus}" Value="Good">
+                            <Setter Property="ProgressColor" Value="Green" />
+                        </DataTrigger>
+
+                        <DataTrigger TargetType="ProgressBar" Binding="{Binding TimerStatus}" Value="Warning">
+                            <Setter Property="ProgressColor" Value="Orange" />
+                        </DataTrigger>
+
+                        <DataTrigger TargetType="ProgressBar" Binding="{Binding TimerStatus}" Value="Danger">
+                            <Setter Property="ProgressColor" Value="Red" />
+                        </DataTrigger>
+                    </ProgressBar.Triggers>
+                </ProgressBar>
+            <Border 
+                HeightRequest="112" 
+                VerticalOptions="Center"
+                Stroke="DarkSlateGrey" 
+                StrokeThickness="2" 
+                StrokeShape="RoundRectangle 12"
+                Padding="10"
+                BackgroundColor="#1AFFFFFF">
+                <Label
+                    Text="{Binding CurrentQuestion.Text}"
+                    HorizontalTextAlignment="Center"
+                    VerticalTextAlignment="Center"
+                    FontSize="20"
+                    TextColor="White"
+                    LineBreakMode="WordWrap"
+                    MaxLines="4" />
+            </Border>
+            <FlexLayout BindableLayout.ItemsSource="{Binding CurrentQuestion.AllAnswerOptions}"
+            Wrap="Wrap" 
+            Direction="Row"
+            JustifyContent="SpaceEvenly"
+            AlignContent="Center"
+            Margin="5">
+
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate>
+                        <Border FlexLayout.Basis="45%"
+                    HeightRequest="90"
+                    Margin="5"
+                    BackgroundColor="#1e293b"
+                    StrokeThickness="0">
+
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer 
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:QuizViewModel}}, Path=AnswerSelectedCommand}"
+                        CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroupList>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Property="Scale" Value="0.95" />
+                                                <Setter Property="Opacity" Value="0.9" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateGroupList>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Label Text="{Binding Text}"
+                       TextColor="White"
+                       FontAttributes="Bold"
+                       FontSize="14"
+                       Padding="8"
+                       HorizontalTextAlignment="Center"
+                       VerticalTextAlignment="Center"
+                       LineBreakMode="WordWrap"
+                       MaxLines="2" />
+
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" 
+                                 Binding="{Binding Status}" 
+                                 Value="Correct">
+                                    <Setter Property="BackgroundColor" Value="Green" />
+                                    <Setter Property="Scale" Value="1.05" />
+                                </DataTrigger>
+
+                                <DataTrigger TargetType="Border" 
+                                 Binding="{Binding Status}" 
+                                 Value="Wrong">
+                                    <Setter Property="BackgroundColor" Value="Red" />
+                                    <Setter Property="Opacity" Value="0.6" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+        </VerticalStackLayout>
+        <VerticalStackLayout Padding="30" 
+                             Spacing="25" 
+                             VerticalOptions="Center" 
+                             IsVisible="{Binding GameOverVisible}">
+            <Label Text="{Binding StatusHeader}"
+                   TextColor="Gold"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"/>
+            <Label Text="{Binding StatusBody}"
+                   TextColor="White"
+                   FontSize="24"
+                   HorizontalOptions="Center"/>
+            <Button Text="{Binding RetryButtonText}"
+                    Command="{Binding PlayAgainCommand}"
+                    BackgroundColor="Yellow"
+                    TextColor="#0b1121"
+                    CornerRadius="15"
+                    HeightRequest="60"/>
+            <Button Text="Huvudmenyn"
+                    Command="{Binding GoToMainPageCommand}"
+                    BackgroundColor="Green"
+                    FontAttributes="Bold"
+                    TextColor="#0b1121"/>
+        </VerticalStackLayout>
+                             
+    </Grid>
+</ContentPage>

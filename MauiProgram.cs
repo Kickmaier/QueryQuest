@@ -5,6 +5,9 @@ using QueryQuest.ViewModels;
 using QueryQuest.Core.Interfaces;
 using QueryQuest.Infrastructure.Data;
 using QueryQuest.Application.Interfaces;
+using QueryQuest.Views;
+using QueryQuest.Infrastructure.Services;
+
 namespace QueryQuest
 {
     public static class MauiProgram
@@ -24,6 +27,7 @@ namespace QueryQuest
             builder.Services.AddSingleton<OpenTriviaDbApiConnection>();
             builder.Services.AddSingleton<IGameSettingsService, GameSettingsService>();
             builder.Services.AddSingleton<IQuestionService, OpenTriviaService>();
+            builder.Services.AddSingleton<IHtmlService, HtmlService>();
             builder.Services.AddSingleton<BaseApiClient>();
             builder.Services.AddSingleton<HttpClient>();
             builder.Services.AddTransient<MainViewModel>();

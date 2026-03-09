@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using QueryQuest.Views;
 using Microsoft.Maui.Graphics;
 
 
@@ -21,7 +22,7 @@ namespace QueryQuest.ViewModels
         
         private IDispatcherTimer _timer;
 
-        private double _totalSeconds = 10.0;
+        private double _totalTime = 100;
         private double _timeLeft;
         private int currentQuestionIndex = 0;
         private string currentCorrectAnswer = "";
@@ -34,7 +35,7 @@ namespace QueryQuest.ViewModels
             get { return _quiAreaVisible; }
             set { _quiAreaVisible = value; OnPropertyChanged(); }
         }
-        private bool _gameOverVisible = true;
+        private bool _gameOverVisible = false;
         public bool GameOverVisible
         {
             get { return _gameOverVisible; }
@@ -69,7 +70,7 @@ namespace QueryQuest.ViewModels
         }
 
         private double _progressBarProgress = 1.0;
-        public double ProgressbarProgress
+        public double ProgressBarProgress
         {
             get => _progressBarProgress;
             set { _progressBarProgress = value; OnPropertyChanged(); }
@@ -95,7 +96,28 @@ namespace QueryQuest.ViewModels
             get => _isAnswerd;
             set { _isAnswerd = value; OnPropertyChanged(); }
         }
-        
+
+        private string _statusHeader;
+        public string StatusHeader
+        {
+            get => _statusHeader;
+            set { _statusHeader = value; OnPropertyChanged(); }
+        }
+
+        private string _statusBody;
+        public string StatusBody
+        {
+            get => _statusBody;
+            set { _statusBody = value; OnPropertyChanged(); }
+        }
+
+        private string _retryButtonText;
+        public string RetryButtonText
+        {
+            get => _retryButtonText;
+            set { _retryButtonText = value; OnPropertyChanged(); }
+        }
+
         private string _amount;
         public string Amount 
         { 
@@ -125,63 +147,99 @@ namespace QueryQuest.ViewModels
             _timer.Tick += (s, e) => UpdateTimer();
 
             AnswerSelectedCommand = new Command<AnswerOption>(OnAnswerSelected);
-            PlayAgainCommand = new Command(async () => await LoadQuestionAsync());
+            PlayAgainCommand = new Command(async () => await ResetGame());
             GoToMainPageCommand = new Command(async () => await Shell.Current.GoToAsync(".."));
         }
-
+        public event EventHandler TimeOutOccurred;
+        
         public async Task LoadQuestionAsync()
         {
             currentQuestionIndex = 0;
-            CurrentScore= 0;
+            CurrentScore = 0;
             QuizAreaVisible = true;
             GameOverVisible = false;
-            var getQuestions = await _questionService.GetQuestionAsync(Amount, Difficulty, CategoryId);
-
-            Questions.Clear();
-            if (getQuestions != null && getQuestions.Count > 0)
+            
+            try
             {
-                foreach (var q in getQuestions)
+                
+                var getQuestions = await _questionService.GetQuestionAsync(Amount, Difficulty, CategoryId);
+
+                Questions.Clear();
+                if (getQuestions != null && getQuestions.Count > 0)
                 {
-                    Questions.Add(q);
+                    foreach (var q in getQuestions)
+                    {
+                        Questions.Add(q);
+                    }
+                    ShowNextQuestion();
                 }
-                ShowNextQuestion();
+                else
+                {
+                    throw new Exception("Inga frågor hittades");
+                }
+            }
+            catch (Exception ex)
+            {
+                string error = (ex.Message == "Inga frågor hittades")
+                    ? ex.Message
+                    : "Kunde inte ladda frågor. Kontrollera din anslutning.";
+                
+                HandleGameOver("Hoppsan", error);
             }
         }
         public void ShowNextQuestion()
         {
-            if (currentQuestionIndex < Questions.Count)
+            try
             {
-                CurrentQuestion = null;
-                CurrentQuestion = Questions[currentQuestionIndex];
+                if (currentQuestionIndex < Questions.Count)
+                {
+                    ProgressBarProgress = 0;
+                    CurrentQuestion = null;
+                    CurrentQuestion = Questions[currentQuestionIndex];
 
 
 
-                QuestionCounterText = $"Fråga: {currentQuestionIndex + 1} / {Questions.Count}";
-                currentCorrectAnswer = CurrentQuestion.CorrectAnswer;
+                    QuestionCounterText = $"Fråga: {currentQuestionIndex + 1} / {Questions.Count}";
+                    currentCorrectAnswer = CurrentQuestion.CorrectAnswer;
 
-                _timeLeft = _totalSeconds;
-                ProgressbarProgress = 1.0;
+                    _timeLeft = _totalTime;
 
-                _timer.Start();
-                currentQuestionIndex++;
+
+                    _timer.Start();
+                    currentQuestionIndex++;
+                }
+                else
+                {
+                    HandleGameOver();
+                }
             }
-            else
+            catch
             {
-                HandleGameOver();
+                HandleGameOver("Ett fel uppstod", "Spelet var tvunget att avbrytas.");
             }
+        }
+
+        public async Task ResetGame()
+        {
+            _timer.Stop();
+
+            await LoadQuestionAsync();
+
         }
 
         private void UpdateTimer()
         {
-            _timeLeft -= 0.1;
-            ProgressbarProgress = _timeLeft/ _totalSeconds;
-            
-            if (ProgressbarProgress > 0.66) TimerStatus = TimerState.Good;
-            
-            else if (ProgressbarProgress > 0.33) TimerStatus = TimerState.Warning;
-            
-            else TimerStatus = TimerState.Danger;
+            if (IsAnswerd) return;
+            _timeLeft -= 1;
+            double elapsedProgress = (_totalTime - _timeLeft) / _totalTime;
+            ProgressBarProgress = elapsedProgress;
 
+            if (ProgressBarProgress > 0.66) TimerStatus = TimerState.Danger;
+
+            else if (ProgressBarProgress > 0.33) TimerStatus = TimerState.Warning;
+
+            else TimerStatus = TimerState.Good;
+            
             if (_timeLeft <= 0)
             {
                 _timer.Stop();
@@ -190,38 +248,65 @@ namespace QueryQuest.ViewModels
         }
         private async void OnAnswerSelected(AnswerOption selectedOption)
         {
-            if (selectedOption == null || IsAnswerd) return;
-            IsAnswerd = true;
-            _timer.Stop();
+            try
+            {
+                if (selectedOption == null || IsAnswerd) return;
+                IsAnswerd = true;
+                _timer.Stop();
 
-            if (selectedOption.Text == currentCorrectAnswer)
-            {
-                selectedOption.Status = AnswerStatus.Correct;
-                CurrentScore++;
-            }
-            else
-            {
-                selectedOption.Status = AnswerStatus.Wrong;
-                var correct = CurrentQuestion.AllAnswerOptions
-                    .FirstOrDefault(a => a.Text == currentCorrectAnswer);
-                if (correct != null) correct.Status = AnswerStatus.Correct;
-            }
+
+
+                if (selectedOption.Text == currentCorrectAnswer)
+                {
+                    selectedOption.Status = AnswerStatus.Correct;
+                    CurrentScore++;
+                }
+                else
+                {
+                    selectedOption.Status = AnswerStatus.Wrong;
+                    ShowAnswer(selectedOption);
+                }
                 await Task.Delay(1000);
-    
+
                 IsAnswerd = false;
                 ShowNextQuestion();
             }
+            catch
+            {
+                HandleGameOver("Ett fel uppstod", "Spelet var tvunget att avbrytas.");
+            }
+        }
+        private void ShowAnswer(AnswerOption? selectedOption)
+        {
+            var correct = CurrentQuestion.AllAnswerOptions
+                    .FirstOrDefault(a => a.Text == currentCorrectAnswer);
+            if (correct != null) correct.Status = AnswerStatus.Correct;
+
+        }
         private async void HandleTimeOut()
         {
-            await Task.Delay(300);
+            TimeOutOccurred?.Invoke(this, EventArgs.Empty);
+            ShowAnswer(null);
+            await Task.Delay(1000);
             ShowNextQuestion();
         }
 
-        private void HandleGameOver()
+        private void HandleGameOver(string? header = null, string? body = null)
         {
+            StatusHeader = header ?? "Spelet är över";
+            StatusBody = body ?? $"Slutresultat: {CurrentScore}";
+            RetryButtonText = header != null ?"Försök igen" : "Spela igen";
+            CurrentQuestion = null;
+            ProgressBarProgress = 1.0;
             _timer.Stop();
             QuizAreaVisible = false;
             GameOverVisible = true;
-        }        
+        }
+
+        public void StopTimer()
+        {
+            _timer?.Stop();
+        }
+
     }
 }

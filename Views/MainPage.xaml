@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="QueryQuest.Views.MainPage"
+             BackgroundColor="#0b1121"
+
+            Shell.NavBarIsVisible="False"
+            Shell.TabBarIsVisible="False"
+            Shell.FlyoutBehavior="Disabled">
+    <Grid
+        ColumnDefinitions="*">
+        <BoxView BackgroundColor="#0b1121"/>
+        
+        <ScrollView
+            x:Name="MainView"
+            Grid.Column="1">
+        <VerticalStackLayout Padding="30,10" Spacing="25">
+            <Image Source="queryquestlogo.png"
+                HeightRequest="185"
+                Aspect="AspectFit" />
+            
+            <Label Text="QUERY QUEST"
+                TextColor="White"
+                FontSize="32"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
+
+                <Label 
+                    x:Name="AmountLabel" 
+                    Text="{Binding AmountLabelText}"
+                    FontSize="16">
+                    <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding IsAmountError}" Value="True">
+                            <Setter Property="TextColor" Value="Red" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Label" Binding="{Binding IsAmountError}" Value="False">
+                        <Setter Property="TextColor" Value="Gold" />
+                    </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+                <Label
+                    x:Name="DifficultyLabel"
+                    Text="{Binding DifficultyLabelText}"
+                    FontSize="16">
+                    <Label.Triggers>
+                    <DataTrigger TargetType="Label" Binding="{Binding IsDifficultyError}" Value="True">
+                        <Setter Property="TextColor" Value="Red"/>
+                    </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding IsDifficultyError}" Value="False">
+                        <Setter Property="TextColor" Value="Gold"/>
+                    </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+                <Label 
+                    x:Name="CategoryLabel"
+                    Text="{Binding CategoryLabelText}"   
+                    FontSize="16">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding IsCategoryError}" Value="True">
+                            <Setter Property="TextColor" Value="Red" />
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" Binding="{Binding IsCategoryError}" Value="False">
+                            <Setter Property="TextColor" Value="Gold"/>
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </VerticalStackLayout>
+            <Button 
+                IsEnabled="{Binding CanStartGame}"
+                Text="Starta Quiz"
+                Clicked="OnGetQuestionClicked"
+                CornerRadius="15" />
+        </VerticalStackLayout>
+    </ScrollView>
+        <Button 
+            Text="≡"
+            FontSize="45"
+                FontAttributes="Bold"
+                BackgroundColor="Transparent"
+                HorizontalOptions="Start" 
+                VerticalOptions="Start"
+                
+                Clicked="OnToggleMenu" />
+        <BoxView x:Name="MenuOverlay" 
+                 BackgroundColor="Black" 
+                 Opacity="0" 
+                 InputTransparent="True">
+            <BoxView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnToggleMenu" />
+            </BoxView.GestureRecognizers>
+        </BoxView>
+
+        <Frame x:Name="SideMenu"
+               Grid.Column="0"
+               WidthRequest="280"
+               HorizontalOptions="Start"
+               TranslationX="-280" 
+               BackgroundColor="#151d33"
+               BorderColor="#2a3a5c"
+               Padding="20"
+               CornerRadius="0">
+            <ScrollView VerticalScrollBarVisibility="Never">
+                <VerticalStackLayout Spacing="20">
+                    <Label Text="INSTÄLLNINGAR" 
+                       TextColor="Gold" 
+                       FontSize="24" 
+                       FontAttributes="Bold" 
+                       Margin="0,40,0,10"/>
+
+                    <Button Text="Kategori ∇" Clicked="ToggleCategorySelection" CornerRadius="15" Margin="0,10,0,0"/>
+                    <VerticalStackLayout x:Name="CategorySelection" IsVisible="False" Margin="10" Spacing="5">
+                        <Button Text="Blandat" Clicked="SetCategory" CommandParameter="" CornerRadius="15">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding CategoryId}" Value="">
+                                    <Setter Property="BackgroundColor" Value="Green"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Allmänbildning" Clicked="SetCategory" CommandParameter="9" CornerRadius="15">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding CategoryId}" Value="9">
+                                    <Setter Property="BackgroundColor" Value="Green"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <Button Text="Musik" Clicked="SetCategory" CommandParameter="12" CornerRadius="15">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding CategoryId}" Value="12">
+                                <Setter Property="BackgroundColor" Value="Green"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                        </Button>
+                        <Button Text="Historia" Clicked="SetCategory" CommandParameter="23" CornerRadius="15">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding CategoryId}" Value="23">
+                                <Setter Property="BackgroundColor" Value="Green"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                        </Button>
+                        <Button Text="Djur" Clicked="SetCategory" CommandParameter="27" CornerRadius="15">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding CategoryId}" Value="27">
+                                <Setter Property="BackgroundColor" Value="Green"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                        </Button>
+                    </VerticalStackLayout>
+
+                    <Button Text="Längd ∇" Clicked="ToggleAmountSelection" CornerRadius="15" Margin="0,10,0,0"/>
+                    <VerticalStackLayout x:Name="AmountSelection" IsVisible="False" Margin="10,0,10,10" Spacing="2">
+                        <Button Text="10" Clicked="SetAmount" CommandParameter="10" HeightRequest="40">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding Amount}" Value="10">
+                                    <Setter Property="BackgroundColor" Value="Green"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="20" Clicked="SetAmount" CommandParameter="20" HeightRequest="40">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding Amount}" Value="20">
+                                    <Setter Property="BackgroundColor" Value="Green"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="30" Clicked="SetAmount" CommandParameter="30" HeightRequest="40">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding Amount}" Value="30">
+                                    <Setter Property="BackgroundColor" Value="Green"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </VerticalStackLayout>
+
+                    <Button Text="Svårighetsgrad ∇" Clicked="ToggleDifficultySelection" CornerRadius="15" Margin="0,10,0,0"/>
+                    <VerticalStackLayout x:Name="DifficultySelection" IsVisible="False" Margin="10,0,10,10" Spacing="2">
+                        <Button Text="Blandat" Clicked="SetDifficulty" BackgroundColor="#34495e" CommandParameter="" CornerRadius="15">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding Difficulty}" Value="">
+                                <Setter Property="BackgroundColor" Value="Green"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                        </Button>
+                        <Button Text="Lätt" IsEnabled="{Binding CanSelectEasy}" Clicked="SetDifficulty" CommandParameter="easy" CornerRadius="15">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding Difficulty}" Value="easy">
+                                    <Setter Property="BackgroundColor" Value="Green"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Medel" IsEnabled="{Binding CanSelectMedium}" Clicked="SetDifficulty" CommandParameter="medium" CornerRadius="15">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding Difficulty}" Value="medium">
+                                    <Setter Property="BackgroundColor" Value="Green"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Text="Svårt" IsEnabled="{Binding CanSelectHard} " Clicked="SetDifficulty" CommandParameter="hard" CornerRadius="15">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding Difficulty}" Value="hard">
+                                    <Setter Property="BackgroundColor" Value="Green"/>
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </VerticalStackLayout>
+
+                    <Button Text="STÄNG" 
+                        Clicked="OnToggleMenu" 
+                        Margin="0,10"
+                        BackgroundColor="#2a3a5c" />
+                </VerticalStackLayout>
+            </ScrollView>
+        </Frame>
+    </Grid>
+</ContentPage>

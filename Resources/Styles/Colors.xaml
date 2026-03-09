@@ -42,4 +42,8 @@
     <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
     <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
     <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+
+    <Color x:Key="QueryGrey">#34495e</Color>
+    <Color x:Key="QueryGreen">#789048</Color>
+    <Color x:Key="QueryYellow">YellowGreen</Color>
 </ResourceDictionary>
