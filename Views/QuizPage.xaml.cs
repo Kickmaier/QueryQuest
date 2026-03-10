@@ -28,7 +28,7 @@ public partial class QuizPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (_quizViewModel.Questions.Count == 0)
+        if (_quizViewModel.QM.Questions.Count == 0)
         {
             await _quizViewModel.LoadQuestionAsync();
         }
@@ -50,10 +50,5 @@ public partial class QuizPage : ContentPage
         }
         await TimerBar.TranslateTo(0, 0, 50);
         await TimerBar.ScaleTo(1.0, 100);
-    }
-
-    private async void OnBackClicked(object sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync("..");
     }
 }

@@ -1,19 +1,21 @@
-﻿using QueryQuest.Core.Interfaces;
+﻿using Microsoft.Maui.Graphics;
+using QueryQuest.Application.Interfaces;
+using QueryQuest.Core.Interfaces;
 using QueryQuest.Core.Models;
+using QueryQuest.ViewModels.Models;
+using QueryQuest.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using QueryQuest.Views;
-using Microsoft.Maui.Graphics;
-using QueryQuest.Application.Interfaces;
-
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace QueryQuest.ViewModels
 {
@@ -21,126 +23,30 @@ namespace QueryQuest.ViewModels
     {
         private readonly IQuestionService _questionService;
         private readonly IGameSettingsService _gameSettings;
+        public ScoreHandler SH { get; }
+        public QuestionManager QM { get; }
+        public QuizUIState UI {  get; } 
 
         private IDispatcherTimer _timer;
 
         private double _totalTime = 100;
         private double _timeLeft;
-        private int currentQuestionIndex = 0;
-        private string currentCorrectAnswer = "";
-
-        public ObservableCollection<Question> Questions { get; set; } = new();
-
-        private bool _quiAreaVisible = true;
-        public bool QuizAreaVisible
-        {
-            get { return _quiAreaVisible; }
-            set { _quiAreaVisible = value; OnPropertyChanged(); }
-        }
-        private bool _gameOverVisible = false;
-        public bool GameOverVisible
-        {
-            get { return _gameOverVisible; }
-            set { _gameOverVisible = value; OnPropertyChanged(); }
-        }
-
-        private int _currentScore = 0;
-        public int CurrentScore
-        {
-            get => _currentScore;
-            set { _currentScore = value; OnPropertyChanged(); }
-        }
-
-        private int _streak = 0;
-        public int Streak
-        {
-            get => _streak;
-            set
-            {
-                _streak = value;
-                OnPropertyChanged(nameof(Streak));
-            }
-        }
-
-        private Question _currentQuestion;
-        public Question CurrentQuestion
-        {
-            get => _currentQuestion;
-            set { _currentQuestion = value; OnPropertyChanged(); }
-        }
-
-        private TimerState _timerStatus = TimerState.Good;
-        public TimerState TimerStatus
-        {
-            get => _timerStatus;
-            set
-            {
-                if (_timerStatus != value)
-                {
-                    _timerStatus = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        private double _progressBarProgress = 1.0;
-        public double ProgressBarProgress
-        {
-            get => _progressBarProgress;
-            set { _progressBarProgress = value; OnPropertyChanged(); }
-        }
-
-        private string _questionCounterText;
-        public string QuestionCounterText
-        {
-            get => _questionCounterText;
-            set { _questionCounterText = value; OnPropertyChanged(); }
-        }
-
         private string _selectedAnswer;
         public string SelectedAnswer
         {
             get => _selectedAnswer;
             set { _selectedAnswer = value; OnPropertyChanged(); } 
         }
-
-        private bool _isAnswerd;
-        public bool IsAnswerd
-        {
-            get => _isAnswerd;
-            set { _isAnswerd = value; OnPropertyChanged(); }
-        }
-
-        private string _statusHeader;
-        public string StatusHeader
-        {
-            get => _statusHeader;
-            set { _statusHeader = value; OnPropertyChanged(); }
-        }
-
-        private string _statusBody;
-        public string StatusBody
-        {
-            get => _statusBody;
-            set { _statusBody = value; OnPropertyChanged(); }
-        }
-
-        private string _retryButtonText;
-        public string RetryButtonText
-        {
-            get => _retryButtonText;
-            set { _retryButtonText = value; OnPropertyChanged(); }
-        }
-
-        private string _amount;
-
         public ICommand AnswerSelectedCommand { get; }
         public ICommand PlayAgainCommand { get; }
         public ICommand GoToMainPageCommand { get; }
-        public QuizViewModel (IQuestionService questionService, IGameSettingsService gameSettings)
+        public QuizViewModel (IQuestionService questionService, IGameSettingsService gameSettings, ScoreHandler scoreHandler, QuestionManager questionManager, QuizUIState quizUIState)
         {
             _gameSettings = gameSettings;
             _questionService = questionService;
+            SH = scoreHandler;
+            QM = questionManager;
+            UI = quizUIState;
             _timer = Dispatcher.GetForCurrentThread().CreateTimer();
             _timer.Interval = TimeSpan.FromMilliseconds(100);
             _timer.Tick += (s, e) => UpdateTimer();
@@ -148,32 +54,23 @@ namespace QueryQuest.ViewModels
             AnswerSelectedCommand = new Command<AnswerOption>(OnAnswerSelected);
             PlayAgainCommand = new Command(async () => await ResetGame());
             GoToMainPageCommand = new Command(async () => await Shell.Current.GoToAsync("//MainPage"));
+            
         }
         public event EventHandler TimeOutOccurred;
         
         public async Task LoadQuestionAsync()
         {
-            currentQuestionIndex = 0;
-            CurrentScore = 0;
-            QuizAreaVisible = true;
-            GameOverVisible = false;
-
-            var amount = _gameSettings.Amount;
-            var difficulty = _gameSettings.Difficulty;
-            var category = _gameSettings.CategoryId;
+            UI.QuizAreaVisible = true;
+            UI.GameOverVisible = false;
 
             try
             {
-                
-                var getQuestions = await _questionService.GetQuestionAsync(amount, difficulty, category);
 
-                Questions.Clear();
+                var getQuestions = await _questionService.GetQuestionAsync(_gameSettings.Amount, _gameSettings.Difficulty, _gameSettings.CategoryId);
+
                 if (getQuestions != null && getQuestions.Count > 0)
                 {
-                    foreach (var q in getQuestions)
-                    {
-                        Questions.Add(q);
-                    }
+                    QM.PrepareQuestion(getQuestions);
                     ShowNextQuestion();
                 }
                 else
@@ -183,9 +80,12 @@ namespace QueryQuest.ViewModels
             }
             catch (Exception ex)
             {
-                string error = (ex.Message == "Inga frågor hittades")
-                    ? ex.Message
-                    : "Kunde inte ladda frågor. Kontrollera din anslutning.";
+                Debug.WriteLine($"Fel vid laddning av frågor: {ex.Message} \n {ex.StackTrace}");
+
+
+                string error = ex.Message.Contains("429")
+                    ? "Api:et är upptaget vänta några sekunder" : (ex.Message == "Inga frågor hittades" ? "Inga frågor hittades"  
+                    : "Kunde inte ladda frågor. Kontrollera din anslutning.");
                 
                 HandleGameOver("Hoppsan", error);
             }
@@ -194,31 +94,22 @@ namespace QueryQuest.ViewModels
         {
             try
             {
-                if (currentQuestionIndex < Questions.Count)
+                if(QM.SetNextQuestion())
                 {
-                    ProgressBarProgress = 0;
-                    CurrentQuestion = null;
-                    CurrentQuestion = Questions[currentQuestionIndex];
-
-
-
-                    QuestionCounterText = $"Fråga: {currentQuestionIndex + 1} / {Questions.Count}";
-                    currentCorrectAnswer = CurrentQuestion.CorrectAnswer;
-
+                    UI.ProgressBarProgress = 0;
+                    UI.QuestionCounterText = QM.GetCurrentText();
                     _timeLeft = _totalTime;
-
-
                     _timer.Start();
-                    currentQuestionIndex++;
                 }
                 else
                 {
                     HandleGameOver();
                 }
             }
-            catch
+            catch(Exception ex) 
             {
                 HandleGameOver("Ett fel uppstod", "Spelet var tvunget att avbrytas.");
+                Debug.WriteLine($"Fel i ShowNextQuestion: {ex.Message}");
             }
         }
 
@@ -232,16 +123,16 @@ namespace QueryQuest.ViewModels
 
         private void UpdateTimer()
         {
-            if (IsAnswerd) return;
+            if (UI.IsAnswerd) return;
             _timeLeft -= 1;
             double elapsedProgress = (_totalTime - _timeLeft) / _totalTime;
-            ProgressBarProgress = elapsedProgress;
+            UI.ProgressBarProgress = elapsedProgress;
 
-            if (ProgressBarProgress > 0.66) TimerStatus = TimerState.Danger;
+            if (UI.ProgressBarProgress > 0.66) UI.TimerStatus = TimerState.Danger;
 
-            else if (ProgressBarProgress > 0.33) TimerStatus = TimerState.Warning;
+            else if (UI.ProgressBarProgress > 0.33) UI.TimerStatus = TimerState.Warning;
 
-            else TimerStatus = TimerState.Good;
+            else UI.TimerStatus = TimerState.Good;
             
             if (_timeLeft <= 0)
             {
@@ -253,36 +144,36 @@ namespace QueryQuest.ViewModels
         {
             try
             {
-                if (selectedOption == null || IsAnswerd) return;
-                IsAnswerd = true;
+                if (selectedOption == null || UI.IsAnswerd) return;
+                UI.IsAnswerd = true;
                 _timer.Stop();
 
-                if (selectedOption.Text == currentCorrectAnswer)
+                if (selectedOption.Text == QM.CurrentCorrectAnswer)
                 {
                     selectedOption.Status = AnswerStatus.Correct;
-                    Streak++;
-                    CurrentScore = CurrentScore + (1 * Streak);
+                    SH.AddCorrectAnswer();
                 }
                 else
                 {
-                    Streak = 0;
+                    SH.HandleWrongAnswer();
                     selectedOption.Status = AnswerStatus.Wrong;
                     ShowAnswer(selectedOption);
                 }
                 await Task.Delay(1000);
 
-                IsAnswerd = false;
+                UI.IsAnswerd = false;
                 ShowNextQuestion();
             }
-            catch
+            catch(Exception ex)
             {
                 HandleGameOver("Ett fel uppstod", "Spelet var tvunget att avbrytas.");
+                Debug.WriteLine($"Fel i OnAnswerSelected: {ex.Message}");
             }
         }
         private void ShowAnswer(AnswerOption? selectedOption)
         {
-            var correct = CurrentQuestion.AllAnswerOptions
-                    .FirstOrDefault(a => a.Text == currentCorrectAnswer);
+            var correct = QM.CurrentQuestion.AllAnswerOptions
+                    .FirstOrDefault(a => a.Text == QM.CurrentCorrectAnswer);
             if (correct != null) correct.Status = AnswerStatus.Correct;
 
         }
@@ -296,21 +187,21 @@ namespace QueryQuest.ViewModels
 
         private void HandleGameOver(string? header = null, string? body = null)
         {
-            StatusHeader = header ?? "Spelet är över";
-            StatusBody = body ?? $"Slutresultat: {CurrentScore}";
-            RetryButtonText = header != null ?"Försök igen" : "Spela igen";
+            UI.StatusHeader = header ?? "Spelet är över";
+            UI.StatusBody = body ?? $"Slutresultat: {SH.CurrentScore}";
+            UI.RetryButtonText = header != null ?"Försök igen" : "Spela igen";
             CleanUp();
-            QuizAreaVisible = false;
-            GameOverVisible = true;
+            UI.QuizAreaVisible = false;
+            UI.GameOverVisible = true;
         }
         public void CleanUp()
         { 
             _timer.Stop();
-            Questions?.Clear();
-            CurrentQuestion = null;
-            currentQuestionIndex = 0;
-            IsAnswerd = false;
-            ProgressBarProgress = 1.0;
+            SH.Reset();
+            QM.Reset();
+            UI.IsAnswerd = false;
+            UI.ProgressBarProgress = 0;
+            UI.TimerStatus = TimerState.Good;
         }
     }
 }

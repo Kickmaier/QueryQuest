@@ -3,10 +3,13 @@ using Microsoft.Extensions.Logging;
 using QueryQuest.Application.Services;
 using QueryQuest.ViewModels;
 using QueryQuest.Core.Interfaces;
+using QueryQuest.Core.Models;
 using QueryQuest.Infrastructure.Data;
 using QueryQuest.Application.Interfaces;
 using QueryQuest.Views;
 using QueryQuest.Infrastructure.Services;
+using QueryQuest.ViewModels.Models;
+
 
 namespace QueryQuest
 {
@@ -30,6 +33,9 @@ namespace QueryQuest
             builder.Services.AddSingleton<IHtmlService, HtmlService>();
             builder.Services.AddSingleton<BaseApiClient>();
             builder.Services.AddSingleton<HttpClient>();
+            builder.Services.AddTransient<ScoreHandler>();
+            builder.Services.AddTransient<QuestionManager>();
+            builder.Services.AddTransient<QuizUIState>();
             builder.Services.AddTransient<MainViewModel>();
             builder.Services.AddTransient<QuizViewModel>();
             builder.Services.AddTransient<MainPage>();
