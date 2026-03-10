@@ -8,10 +8,6 @@ using System.Web;
 
 namespace QueryQuest.Views;
 
-[QueryProperty(nameof(Amount), "amount")]
-[QueryProperty(nameof(Difficulty), "difficulty")]
-[QueryProperty(nameof(CategoryId), "category")]
-
 public partial class QuizPage : ContentPage
 {
     private readonly QuizViewModel _quizViewModel;
@@ -21,15 +17,14 @@ public partial class QuizPage : ContentPage
         InitializeComponent();
         _quizViewModel = quizViewModel;
         BindingContext = _quizViewModel;
+        
 
         _quizViewModel.TimeOutOccurred += async (s, e) =>
         {
             await ShakeAndScale();
         };
     }
-    public string Amount { set => _quizViewModel.Amount = value; }
-    public string Difficulty { set => _quizViewModel.Difficulty = value; }
-    public string CategoryId { set => _quizViewModel.CategoryId = value; }
+    
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -41,7 +36,7 @@ public partial class QuizPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        _quizViewModel.StopTimer();
+        _quizViewModel.CleanUp();
     }
     public async Task ShakeAndScale()
     {

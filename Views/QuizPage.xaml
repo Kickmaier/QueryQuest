@@ -3,33 +3,50 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:QueryQuest.ViewModels"
              x:Class="QueryQuest.Views.QuizPage"
-             BackgroundColor="#0b1121">
+             BackgroundColor="#0b1121"
+             
+             Shell.NavBarIsVisible="False"
+             NavigationPage.HasNavigationBar="False">
     <Grid>
-        <VerticalStackLayout Padding="30, 5, 30, 30" Spacing="10" 
+        <VerticalStackLayout Padding="30, 25, 30, 30" Spacing="10" 
                              IsVisible="{Binding QuizAreaVisible}">
             <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Center" Margin="0,0,0,10">
-                <Button
-                    Text="←"
+                <ImageButton
+                    Source="backbutton.png" 
                     Grid.Column="0"
-                    FontSize="45"
-                    HorizontalOptions="Start"
-                    VerticalOptions="Start"
-                    FontAttributes="Bold"
                     BackgroundColor="Transparent"
-                    Clicked="OnBackClicked"/>
-                <Label
+                    HeightRequest="45"
+                    WidthRequest="45"
+                    VerticalOptions="Start"
+                    HorizontalOptions="Start"
+                    Aspect="AspectFit"
+                    Command="{Binding GoToMainPageCommand}">
+                    <ImageButton.Padding>5</ImageButton.Padding>
+                </ImageButton>
+                <HorizontalStackLayout Spacing="30" Grid.Column="1" HorizontalOptions="Center">
+                    <Label
                     Text="{Binding CurrentScore, StringFormat='Poäng: {0}'}"
-                    Grid.Column="1"
+                    
                     TextColor="Gold"
-                    FontSize="18"
+                    FontSize="25"
                     FontAttributes="Bold"
-                    HorizontalOptions="Center"/>
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"/>
+                    <Label 
+                    Text="{Binding Streak, StringFormat='Streak: {0}'}"
+                    TextColor="ForestGreen"
+                    FontSize="25"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    FontAttributes="Bold"/>
+                </HorizontalStackLayout>
                 <Label 
                     Text="{Binding QuestionCounterText}"
                     Grid.Column="2"
                     TextColor="LightGray"
-                    FontSize="14"
-                    HorizontalOptions="End" />  
+                    FontSize="20"
+                    HorizontalOptions="End"
+                    VerticalOptions="Center"/>  
             </Grid>
             <ProgressBar 
                 x:Name="TimerBar"
@@ -73,13 +90,13 @@
             Direction="Row"
             JustifyContent="SpaceEvenly"
             AlignContent="Center"
-            Margin="5">
+            Margin="10">
 
                 <BindableLayout.ItemTemplate>
                     <DataTemplate>
                         <Border FlexLayout.Basis="45%"
                     HeightRequest="90"
-                    Margin="5"
+                    Margin="10"
                     BackgroundColor="#1e293b"
                     StrokeThickness="0">
 

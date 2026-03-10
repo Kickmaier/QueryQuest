@@ -25,8 +25,7 @@ public partial class MainPage : ContentPage
         string amount = _mainViewModel.Amount;
         string difficulty = _mainViewModel.Difficulty;
         string category = _mainViewModel.CategoryId;
-        
-        await Shell.Current.GoToAsync($"{nameof(QuizPage)}?amount={amount}&difficulty={difficulty}&category={category}");
+        await Shell.Current.GoToAsync($"//{nameof(QuizPage)}");
 
         btn.Text = "Starta Quiz";
     }

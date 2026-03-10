@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using QueryQuest.Views;
 using Microsoft.Maui.Graphics;
+using QueryQuest.Application.Interfaces;
 
 
 namespace QueryQuest.ViewModels
@@ -19,7 +20,8 @@ namespace QueryQuest.ViewModels
     public class QuizViewModel : ObservableObjects
     {
         private readonly IQuestionService _questionService;
-        
+        private readonly IGameSettingsService _gameSettings;
+
         private IDispatcherTimer _timer;
 
         private double _totalTime = 100;
@@ -48,6 +50,18 @@ namespace QueryQuest.ViewModels
             get => _currentScore;
             set { _currentScore = value; OnPropertyChanged(); }
         }
+
+        private int _streak = 0;
+        public int Streak
+        {
+            get => _streak;
+            set
+            {
+                _streak = value;
+                OnPropertyChanged(nameof(Streak));
+            }
+        }
+
         private Question _currentQuestion;
         public Question CurrentQuestion
         {
@@ -119,28 +133,13 @@ namespace QueryQuest.ViewModels
         }
 
         private string _amount;
-        public string Amount 
-        { 
-            get => _amount; 
-            set { _amount = value; OnPropertyChanged(); } 
-        }
-        private string _difficulty;
-        public string Difficulty 
-        {
-            get => _difficulty; 
-            set { _difficulty = value; OnPropertyChanged(); } 
-        }
-        private string _categoryId;
-        public string CategoryId
-        {
-            get => _categoryId;
-            set { _categoryId = value; OnPropertyChanged(); }
-        }
+
         public ICommand AnswerSelectedCommand { get; }
         public ICommand PlayAgainCommand { get; }
         public ICommand GoToMainPageCommand { get; }
-        public QuizViewModel (IQuestionService questionService)
+        public QuizViewModel (IQuestionService questionService, IGameSettingsService gameSettings)
         {
+            _gameSettings = gameSettings;
             _questionService = questionService;
             _timer = Dispatcher.GetForCurrentThread().CreateTimer();
             _timer.Interval = TimeSpan.FromMilliseconds(100);
@@ -148,7 +147,7 @@ namespace QueryQuest.ViewModels
 
             AnswerSelectedCommand = new Command<AnswerOption>(OnAnswerSelected);
             PlayAgainCommand = new Command(async () => await ResetGame());
-            GoToMainPageCommand = new Command(async () => await Shell.Current.GoToAsync(".."));
+            GoToMainPageCommand = new Command(async () => await Shell.Current.GoToAsync("//MainPage"));
         }
         public event EventHandler TimeOutOccurred;
         
@@ -158,11 +157,15 @@ namespace QueryQuest.ViewModels
             CurrentScore = 0;
             QuizAreaVisible = true;
             GameOverVisible = false;
-            
+
+            var amount = _gameSettings.Amount;
+            var difficulty = _gameSettings.Difficulty;
+            var category = _gameSettings.CategoryId;
+
             try
             {
                 
-                var getQuestions = await _questionService.GetQuestionAsync(Amount, Difficulty, CategoryId);
+                var getQuestions = await _questionService.GetQuestionAsync(amount, difficulty, category);
 
                 Questions.Clear();
                 if (getQuestions != null && getQuestions.Count > 0)
@@ -254,15 +257,15 @@ namespace QueryQuest.ViewModels
                 IsAnswerd = true;
                 _timer.Stop();
 
-
-
                 if (selectedOption.Text == currentCorrectAnswer)
                 {
                     selectedOption.Status = AnswerStatus.Correct;
-                    CurrentScore++;
+                    Streak++;
+                    CurrentScore = CurrentScore + (1 * Streak);
                 }
                 else
                 {
+                    Streak = 0;
                     selectedOption.Status = AnswerStatus.Wrong;
                     ShowAnswer(selectedOption);
                 }
@@ -296,17 +299,18 @@ namespace QueryQuest.ViewModels
             StatusHeader = header ?? "Spelet är över";
             StatusBody = body ?? $"Slutresultat: {CurrentScore}";
             RetryButtonText = header != null ?"Försök igen" : "Spela igen";
-            CurrentQuestion = null;
-            ProgressBarProgress = 1.0;
-            _timer.Stop();
+            CleanUp();
             QuizAreaVisible = false;
             GameOverVisible = true;
         }
-
-        public void StopTimer()
-        {
-            _timer?.Stop();
+        public void CleanUp()
+        { 
+            _timer.Stop();
+            Questions?.Clear();
+            CurrentQuestion = null;
+            currentQuestionIndex = 0;
+            IsAnswerd = false;
+            ProgressBarProgress = 1.0;
         }
-
     }
 }

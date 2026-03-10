@@ -74,19 +74,21 @@
                 CornerRadius="15" />
         </VerticalStackLayout>
     </ScrollView>
-        <Button 
-            Text="≡"
-            FontSize="45"
-                FontAttributes="Bold"
-                BackgroundColor="Transparent"
-                HorizontalOptions="Start" 
-                VerticalOptions="Start"
-                
-                Clicked="OnToggleMenu" />
+        <ImageButton 
+            Source="burgermenu.png" 
+            Clicked="OnToggleMenu"
+            BackgroundColor="Transparent"
+            HeightRequest="30"
+            WidthRequest="30"
+            HorizontalOptions="Start" 
+            VerticalOptions="Start"
+            Aspect="AspectFit"
+            Margin="15,10" />
+
         <BoxView x:Name="MenuOverlay" 
-                 BackgroundColor="Black" 
-                 Opacity="0" 
-                 InputTransparent="True">
+         BackgroundColor="Black" 
+         Opacity="0" 
+         InputTransparent="True">
             <BoxView.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnToggleMenu" />
             </BoxView.GestureRecognizers>
@@ -119,12 +121,12 @@
                             </Button.Triggers>
                         </Button>
                         <Button Text="Allmänbildning" Clicked="SetCategory" CommandParameter="9" CornerRadius="15">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button" Binding="{Binding CategoryId}" Value="9">
-                                    <Setter Property="BackgroundColor" Value="Green"/>
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding CategoryId}" Value="9">
+                                <Setter Property="BackgroundColor" Value="Green"/>
+                            </DataTrigger>
+                        </Button.Triggers>
+                            </Button>
 
                         <Button Text="Musik" Clicked="SetCategory" CommandParameter="12" CornerRadius="15">
                         <Button.Triggers>
