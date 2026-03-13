@@ -26,15 +26,14 @@ namespace QueryQuest
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
             builder.Configuration.AddUserSecrets<MainPage>();
-            builder.Services.AddSingleton<MongoDbConnection>();
             builder.Services.AddSingleton<OpenTriviaDbApiConnection>();
             builder.Services.AddSingleton<IGameSettingsService, GameSettingsService>();
-            builder.Services.AddSingleton<IQuestionService, OpenTriviaService>();
+            builder.Services.AddSingleton<ITriviaService, OpenTriviaService>();
             builder.Services.AddSingleton<IHtmlService, HtmlService>();
             builder.Services.AddSingleton<BaseApiClient>();
             builder.Services.AddSingleton<HttpClient>();
+            builder.Services.AddTransient<IQuestionService, QuestionManager>();
             builder.Services.AddTransient<ScoreHandler>();
-            builder.Services.AddTransient<QuestionManager>();
             builder.Services.AddTransient<QuizUIState>();
             builder.Services.AddTransient<MainViewModel>();
             builder.Services.AddTransient<QuizViewModel>();

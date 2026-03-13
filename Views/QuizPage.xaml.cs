@@ -28,16 +28,9 @@ public partial class QuizPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (_quizViewModel.QM.Questions.Count == 0)
-        {
-            await _quizViewModel.LoadQuestionAsync();
-        }
+        await _quizViewModel.LoadQuestionAsync();
     }
-    protected override void OnDisappearing()
-    {
-        base.OnDisappearing();
-        _quizViewModel.CleanUp();
-    }
+
     public async Task ShakeAndScale()
     {
         TimerBar.ScaleTo(1.1, 50);
@@ -50,5 +43,10 @@ public partial class QuizPage : ContentPage
         }
         await TimerBar.TranslateTo(0, 0, 50);
         await TimerBar.ScaleTo(1.0, 100);
+    }
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _quizViewModel.CleanUp();
     }
 }

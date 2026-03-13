@@ -16,9 +16,9 @@ namespace QueryQuest.ViewModels
     public class MainViewModel : ObservableObjects
     {
         private readonly IGameSettingsService _gameSettings;
-        private readonly IQuestionService _questionService;
+        private readonly ITriviaService _questionService;
 
-        public MainViewModel(IGameSettingsService gameSettings, IQuestionService questionService)
+        public MainViewModel(IGameSettingsService gameSettings, ITriviaService questionService)
         {
             _gameSettings = gameSettings;
             _questionService = questionService;
@@ -66,9 +66,9 @@ namespace QueryQuest.ViewModels
         public string AmountLabelText => $"Längd: {_gameSettings.AmountDisplay}";
         public string DifficultyLabelText => $"Svårighetsgrad: {_gameSettings.DifficultyDisplay}";
         public string CategoryLabelText => $"Kategori: {_gameSettings.CategoryIdDisplay}";
-        public bool IsAmountError => _gameSettings.AmountDisplay.Contains("Fel");
-        public bool IsDifficultyError => _gameSettings.DifficultyDisplay.Contains("Fel");
-        public bool IsCategoryError => _gameSettings.CategoryIdDisplay == "Okänd kategori";
+        public bool IsAmountError => _gameSettings.AmountDisplay == _gameSettings.AmountError;
+        public bool IsDifficultyError => _gameSettings.DifficultyDisplay == _gameSettings.DifficultyError;
+        public bool IsCategoryError => _gameSettings.CategoryIdDisplay == _gameSettings.UnknownCategory;
         public bool CanStartGame => !IsAmountError && !IsDifficultyError && !IsCategoryError;
 
         private async Task UpdateDifficultyAvailabilityAsync()

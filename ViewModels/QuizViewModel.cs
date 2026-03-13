@@ -1,4 +1,5 @@
-﻿using Microsoft.Maui.Graphics;
+﻿using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
 using QueryQuest.Application.Interfaces;
 using QueryQuest.Core.Interfaces;
 using QueryQuest.Core.Models;
@@ -21,26 +22,21 @@ namespace QueryQuest.ViewModels
 {
     public class QuizViewModel : ObservableObjects
     {
-        private readonly IQuestionService _questionService;
+        private readonly ITriviaService _questionService;
         private readonly IGameSettingsService _gameSettings;
+        public IQuestionService QM { get; }
         public ScoreHandler SH { get; }
-        public QuestionManager QM { get; }
         public QuizUIState UI {  get; } 
 
         private IDispatcherTimer _timer;
-
         private double _totalTime = 100;
         private double _timeLeft;
         private string _selectedAnswer;
-        public string SelectedAnswer
-        {
-            get => _selectedAnswer;
-            set { _selectedAnswer = value; OnPropertyChanged(); } 
-        }
+
         public ICommand AnswerSelectedCommand { get; }
         public ICommand PlayAgainCommand { get; }
         public ICommand GoToMainPageCommand { get; }
-        public QuizViewModel (IQuestionService questionService, IGameSettingsService gameSettings, ScoreHandler scoreHandler, QuestionManager questionManager, QuizUIState quizUIState)
+        public QuizViewModel (ITriviaService questionService, IGameSettingsService gameSettings, ScoreHandler scoreHandler, IQuestionService questionManager, QuizUIState quizUIState)
         {
             _gameSettings = gameSettings;
             _questionService = questionService;
@@ -54,7 +50,7 @@ namespace QueryQuest.ViewModels
             AnswerSelectedCommand = new Command<AnswerOption>(OnAnswerSelected);
             PlayAgainCommand = new Command(async () => await ResetGame());
             GoToMainPageCommand = new Command(async () => await Shell.Current.GoToAsync("//MainPage"));
-            
+
         }
         public event EventHandler TimeOutOccurred;
         
@@ -70,7 +66,8 @@ namespace QueryQuest.ViewModels
 
                 if (getQuestions != null && getQuestions.Count > 0)
                 {
-                    QM.PrepareQuestion(getQuestions);
+                    
+                    QM.PrepareQuestion(getQuestions, (int.Parse(_gameSettings.Amount)));
                     ShowNextQuestion();
                 }
                 else
@@ -83,10 +80,14 @@ namespace QueryQuest.ViewModels
                 Debug.WriteLine($"Fel vid laddning av frågor: {ex.Message} \n {ex.StackTrace}");
 
 
-                string error = ex.Message.Contains("429")
-                    ? "Api:et är upptaget vänta några sekunder" : (ex.Message == "Inga frågor hittades" ? "Inga frågor hittades"  
-                    : "Kunde inte ladda frågor. Kontrollera din anslutning.");
-                
+                string error = ex.Message switch
+                {
+                    var message when message.Contains("429") => "Api:et är upptaget vänta några sekunder",
+                    "Inga frågor hittades"                   => "Inga frågor hittades",
+                    "Fel på frågor, försök igen"             => "Fel på frågor, försök igen",
+                    _                                        => "Kunde inte ladda frågor. Kontrollera din anslutning."
+                };
+
                 HandleGameOver("Hoppsan", error);
             }
         }
@@ -94,8 +95,9 @@ namespace QueryQuest.ViewModels
         {
             try
             {
-                if(QM.SetNextQuestion())
+                if(QM.HasMoreQuestions)
                 {
+                    QM.SetNextQuestion();
                     UI.ProgressBarProgress = 0;
                     UI.QuestionCounterText = QM.GetCurrentText();
                     _timeLeft = _totalTime;
@@ -142,33 +144,48 @@ namespace QueryQuest.ViewModels
         }
         private async void OnAnswerSelected(AnswerOption selectedOption)
         {
+            if (IsInvalid(selectedOption)) return;
             try
             {
-                if (selectedOption == null || UI.IsAnswerd) return;
-                UI.IsAnswerd = true;
-                _timer.Stop();
-
-                if (selectedOption.Text == QM.CurrentCorrectAnswer)
-                {
-                    selectedOption.Status = AnswerStatus.Correct;
-                    SH.AddCorrectAnswer();
-                }
-                else
-                {
-                    SH.HandleWrongAnswer();
-                    selectedOption.Status = AnswerStatus.Wrong;
-                    ShowAnswer(selectedOption);
-                }
+                PrepareCheck();
+                bool isCorrect = ScoreAndCorrect(selectedOption);
                 await Task.Delay(1000);
 
-                UI.IsAnswerd = false;
-                ShowNextQuestion();
+                PrepareForNextQuestion();
+                
             }
             catch(Exception ex)
             {
                 HandleGameOver("Ett fel uppstod", "Spelet var tvunget att avbrytas.");
                 Debug.WriteLine($"Fel i OnAnswerSelected: {ex.Message}");
             }
+        }
+        private bool IsInvalid(AnswerOption selectedOption) => (selectedOption == null || UI.IsAnswerd);
+        private void PrepareCheck()
+        {
+            UI.IsAnswerd = true;
+            _timer.Stop();
+        }
+        private bool ScoreAndCorrect(AnswerOption selectedOption)
+        {
+            bool isCorrect = QM.CheckAnswer(selectedOption);
+            if (isCorrect)
+            {
+                selectedOption.Status = AnswerStatus.Correct;
+                SH.AddCorrectAnswer();
+            }
+            else
+            {
+                SH.HandleWrongAnswer();
+                selectedOption.Status = AnswerStatus.Wrong;
+                ShowAnswer(selectedOption);
+            }
+            return isCorrect;
+        }
+        private void PrepareForNextQuestion()
+        {
+            UI.IsAnswerd = false;
+            ShowNextQuestion();
         }
         private void ShowAnswer(AnswerOption? selectedOption)
         {
@@ -182,7 +199,7 @@ namespace QueryQuest.ViewModels
             TimeOutOccurred?.Invoke(this, EventArgs.Empty);
             ShowAnswer(null);
             await Task.Delay(1000);
-            ShowNextQuestion();
+            PrepareForNextQuestion();
         }
 
         private void HandleGameOver(string? header = null, string? body = null)
