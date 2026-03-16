@@ -7,21 +7,24 @@ using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using QueryQuest.Application.Interfaces;
 using QueryQuest.Core.Interfaces;
 using QueryQuest.Core.Models;
+using QueryQuest.ViewModels.Models;
 
 namespace QueryQuest.ViewModels
 {
-    public class MainViewModel : ObservableObjects
+    public class MainViewModel : ObservableObject
     {
         private readonly IGameSettingsService _gameSettings;
         private readonly ITriviaService _questionService;
-
-        public MainViewModel(IGameSettingsService gameSettings, ITriviaService questionService)
+        public MainUIState UI { get; }
+        public MainViewModel(IGameSettingsService gameSettings, ITriviaService questionService, MainUIState mainUIState)
         {
             _gameSettings = gameSettings;
             _questionService = questionService;
+            UI = mainUIState;
             _gameSettings.PropertyChanged += async (s, e) =>
             {
                 if (e.PropertyName == nameof(_gameSettings.CategoryId))
@@ -33,7 +36,7 @@ namespace QueryQuest.ViewModels
                     e.PropertyName == nameof(_gameSettings.Amount) ||
                     e.PropertyName == nameof(_gameSettings.Difficulty))
                 {
-                    Refresh();
+                    OnPropertyChanged(string.Empty);
                     await UpdateDifficultyAvailabilityAsync();
                 }
             };
@@ -97,30 +100,12 @@ namespace QueryQuest.ViewModels
             }
         }
 
-        public void SetAmount(string value)
-        {
-            _gameSettings.Amount = value;
-        }
-        public void SetDifficulty(string value)
-        {
-            _gameSettings.Difficulty = value;
-        }
-        public void SetCategory(string value)
-        {
-            _gameSettings.CategoryId = value;
-        }
-        public void Refresh()
-        {
-            OnPropertyChanged(nameof(CategoryId));
-            OnPropertyChanged(nameof(Amount));
-            OnPropertyChanged(nameof(Difficulty));
-            OnPropertyChanged(nameof(AmountLabelText));
-            OnPropertyChanged(nameof(DifficultyLabelText));
-            OnPropertyChanged(nameof(CategoryLabelText));
-            OnPropertyChanged(nameof(IsAmountError));
-            OnPropertyChanged(nameof(IsDifficultyError));
-            OnPropertyChanged(nameof(IsCategoryError));
-            OnPropertyChanged(nameof(CanStartGame));
-        }
+        public void SetAmount(string value) { _gameSettings.Amount = value; UI.IsAmountVisible = false; }
+        
+        public void SetDifficulty(string value) { _gameSettings.Difficulty = value; UI.IsDifficultyVisible = false; }
+        
+        public void SetCategory(string value) { _gameSettings.CategoryId = value; UI.IsCategoryVisible = false; }
+
+        public void ToggleMenu() => UI.IsMenuVisible = !UI.IsMenuVisible;
     }
 }

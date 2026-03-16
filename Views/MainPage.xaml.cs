@@ -1,4 +1,5 @@
 ﻿using QueryQuest.ViewModels;
+using QueryQuest.ViewModels.Models;
 using System.Linq;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -15,25 +16,34 @@ public partial class MainPage : ContentPage
         InitializeComponent();
         _mainViewModel = mainViewModel;
         BindingContext = _mainViewModel;
+
+        _mainViewModel.UI.PropertyChanged += async (s, e) =>
+        {
+            if (e.PropertyName == nameof(MainUIState.IsMenuVisible)) await AnimateMenu(_mainViewModel.UI.IsMenuVisible);
+        };
     }
 
     private async void OnGetQuestionClicked(object sender, EventArgs e)
     {
-        Button btn = (Button)sender;
-        btn.Text = "Laddar fråga...";
-
-        string amount = _mainViewModel.Amount;
-        string difficulty = _mainViewModel.Difficulty;
-        string category = _mainViewModel.CategoryId;
-        await Shell.Current.GoToAsync($"//{nameof(QuizPage)}");
-
-        btn.Text = "Starta Quiz";
+        if (_mainViewModel.CanStartGame)
+        {
+            await Shell.Current.GoToAsync($"//{nameof(QuizPage)}");
+        }
     }
-    private async void OnToggleMenu(object sender, EventArgs e)
-    {
-        bool isOpening = SideMenu.TranslationX < 0;
+    private void OnToggleMenu(object sender, EventArgs e) => _mainViewModel.ToggleMenu();
+    private void SetAmount(object sender, EventArgs e) => _mainViewModel.SetAmount(GetSender(sender));
+    private void SetDifficulty(object sender, EventArgs e) => _mainViewModel.SetDifficulty(GetSender(sender));
+    private void SetCategory(object sender, EventArgs e) => _mainViewModel.SetCategory(GetSender(sender));
 
-        if (isOpening)
+    private void ToggleAmountSelection(object sender, EventArgs e) => _mainViewModel.UI.IsAmountVisible = !_mainViewModel.UI.IsAmountVisible;
+    private void ToggleDifficultySelection(object sender, EventArgs e) => _mainViewModel.UI.IsDifficultyVisible = !_mainViewModel.UI.IsDifficultyVisible;
+    private void ToggleCategorySelection(object sender, EventArgs e) => _mainViewModel.UI.IsCategoryVisible = !_mainViewModel.UI.IsCategoryVisible;
+
+    private string GetSender(object sender) => ((Button)sender).CommandParameter.ToString();
+
+    private async Task AnimateMenu(bool isOpen)
+    {     
+        if (isOpen)
         {
             MenuOverlay.InputTransparent = false;
             await Task.WhenAll(
@@ -51,48 +61,6 @@ public partial class MainPage : ContentPage
                 MenuOverlay.FadeTo(0, 300)
             );
         }
-    }
-    private void SetAmount(object sender, EventArgs e)
-    {
-        if (sender is Button btn)
-            _mainViewModel.SetAmount(btn.CommandParameter.ToString());
-            AmountSelection.IsVisible = false;
-        
-    }
-
-    private void SetDifficulty(object sender, EventArgs e)
-    {
-        if (sender is Button btn)
-            _mainViewModel.SetDifficulty(btn.CommandParameter.ToString());
-            DifficultySelection.IsVisible = false;
-    }
-
-    private void SetCategory(object sender, EventArgs e)
-    {
-        if (sender is Button btn)
-            _mainViewModel.SetCategory(btn.CommandParameter.ToString());
-            CategorySelection.IsVisible = false;
-    }
-
-    private void ToggleAmountSelection(object sender, EventArgs e)
-    {
-        AmountSelection.IsVisible = !AmountSelection.IsVisible;
-        DifficultySelection.IsVisible = false;
-        CategorySelection.IsVisible = false;
-    }
-
-    private void ToggleDifficultySelection(object sender, EventArgs e)
-    {
-        DifficultySelection.IsVisible = !DifficultySelection.IsVisible;
-        AmountSelection.IsVisible = false;
-        CategorySelection.IsVisible = false;
-    }
-
-    private void ToggleCategorySelection(object sender, EventArgs e)
-    {
-        CategorySelection.IsVisible = !CategorySelection.IsVisible;
-        AmountSelection.IsVisible = false;
-        DifficultySelection.IsVisible = false;
     }
 }
 

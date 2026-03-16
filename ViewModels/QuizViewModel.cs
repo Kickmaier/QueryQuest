@@ -20,12 +20,13 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace QueryQuest.ViewModels
 {
-    public class QuizViewModel : ObservableObjects
+    public class QuizViewModel : ObservableObject
     {
         private readonly ITriviaService _questionService;
         private readonly IGameSettingsService _gameSettings;
+        public IScoreHandler _sH { get; }
         public IQuestionService QM { get; }
-        public ScoreHandler SH { get; }
+        
         public QuizUIState UI {  get; } 
 
         private IDispatcherTimer _timer;
@@ -36,11 +37,11 @@ namespace QueryQuest.ViewModels
         public ICommand AnswerSelectedCommand { get; }
         public ICommand PlayAgainCommand { get; }
         public ICommand GoToMainPageCommand { get; }
-        public QuizViewModel (ITriviaService questionService, IGameSettingsService gameSettings, ScoreHandler scoreHandler, IQuestionService questionManager, QuizUIState quizUIState)
+        public QuizViewModel (ITriviaService questionService, IGameSettingsService gameSettings, IScoreHandler scoreHandler, IQuestionService questionManager, QuizUIState quizUIState)
         {
             _gameSettings = gameSettings;
             _questionService = questionService;
-            SH = scoreHandler;
+            _sH = scoreHandler;
             QM = questionManager;
             UI = quizUIState;
             _timer = Dispatcher.GetForCurrentThread().CreateTimer();
@@ -152,7 +153,6 @@ namespace QueryQuest.ViewModels
                 await Task.Delay(1000);
 
                 PrepareForNextQuestion();
-                
             }
             catch(Exception ex)
             {
@@ -172,11 +172,11 @@ namespace QueryQuest.ViewModels
             if (isCorrect)
             {
                 selectedOption.Status = AnswerStatus.Correct;
-                SH.AddCorrectAnswer();
+                _sH.AddCorrectAnswer();
             }
             else
             {
-                SH.HandleWrongAnswer();
+                _sH.HandleWrongAnswer();
                 selectedOption.Status = AnswerStatus.Wrong;
                 ShowAnswer(selectedOption);
             }
@@ -205,8 +205,20 @@ namespace QueryQuest.ViewModels
         private void HandleGameOver(string? header = null, string? body = null)
         {
             UI.StatusHeader = header ?? "Spelet är över";
-            UI.StatusBody = body ?? $"Slutresultat: {SH.CurrentScore}";
-            UI.RetryButtonText = header != null ?"Försök igen" : "Spela igen";
+            UI.StatusBody = body ?? string.Empty;
+            if (header == null)
+            {
+                UI.StatusBody =
+                    $"Antal rätt: {_sH.CorrectAnswerCount} / {_gameSettings.Amount}" +
+                    $"\nHögsta Streak: {_sH.HighestStreakCount} / {_gameSettings.Amount}";
+                UI.StatusScore =
+                    $"Slutresultat: {_sH.CurrentScore}";
+            }
+            else
+            {
+                UI.StatusScore = string.Empty;
+            }
+                UI.RetryButtonText = header != null ? "Försök igen" : "Spela igen";
             CleanUp();
             UI.QuizAreaVisible = false;
             UI.GameOverVisible = true;
@@ -214,7 +226,7 @@ namespace QueryQuest.ViewModels
         public void CleanUp()
         { 
             _timer.Stop();
-            SH.Reset();
+            _sH.Reset();
             QM.Reset();
             UI.IsAnswerd = false;
             UI.ProgressBarProgress = 0;

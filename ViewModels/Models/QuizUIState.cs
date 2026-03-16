@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace QueryQuest.ViewModels.Models
 {
-    public class QuizUIState : ObservableObjects
+    public class QuizUIState : ObservableObject
     {
+        public bool IsScoreVisible => _statusHeader == null;
         private bool _quiAreaVisible = true;
         public bool QuizAreaVisible
         {
@@ -34,7 +35,12 @@ namespace QueryQuest.ViewModels.Models
             get => _statusBody;
             set { _statusBody = value; OnPropertyChanged(); }
         }
-
+        private string _statusScore;
+        public string StatusScore
+        {
+            get => _statusScore;
+            set { _statusScore = value; OnPropertyChanged(); }
+        }
         private string _retryButtonText;
         public string RetryButtonText
         {

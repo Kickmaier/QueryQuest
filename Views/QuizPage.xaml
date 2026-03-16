@@ -25,7 +25,7 @@
                 </ImageButton>
                 <HorizontalStackLayout Spacing="30" Grid.Column="1" HorizontalOptions="Center">
                     <Label
-                    Text="{Binding SH.CurrentScore, StringFormat='Poäng: {0}'}"
+                    Text="{Binding _sH.CurrentScore, StringFormat='Poäng: {0}'}"
                     
                     TextColor="Gold"
                     FontSize="25"
@@ -33,7 +33,7 @@
                     HorizontalOptions="Center"
                     VerticalOptions="Center"/>
                     <Label 
-                    Text="{Binding SH.Streak, StringFormat='Streak: {0}'}"
+                    Text="{Binding _sH.Streak, StringFormat='Streak: {0}'}"
                     TextColor="ForestGreen"
                     FontSize="25"
                     HorizontalOptions="Center"
@@ -167,6 +167,11 @@
                    TextColor="White"
                    FontSize="24"
                    HorizontalOptions="Center"/>
+            <Label Text="{Binding UI.StatusScore}"
+                   TextColor="Gold"
+                   FontSize="30"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding UI.IsScoreVisible}"/>
             <Button Text="{Binding UI.RetryButtonText}"
                     Command="{Binding PlayAgainCommand}"
                     BackgroundColor="Yellow"
